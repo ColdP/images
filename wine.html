@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>翻译汇报：酒的起源 / Translating the Origins of Wine</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        /* --- 1. THE SETUP & MATERIAL DESIGN 3 THEME --- */
+        :root {
+            --md-sys-color-primary: #0b57d0;
+            --md-sys-color-on-primary: #ffffff;
+            --md-sys-color-primary-container: #d3e3fd;
+            --md-sys-color-on-primary-container: #041e49;
+            --md-sys-color-secondary: #00639b;
+            --md-sys-color-secondary-container: #cce5ff;
+            --md-sys-color-on-secondary-container: #001d33;
+            --md-sys-color-surface: #fdfbff;
+            --md-sys-color-on-surface: #1f1f1f;
+            --md-sys-color-on-surface-variant: #444746;
+            --md-sys-color-outline: #74777f;
+            --md-sys-color-outline-variant: #c4c6d0;
+            --md-sys-color-surface-container: #f3f4f9;
+            --md-sys-color-surface-container-highest: #e3e2e6;
+            --md-sys-color-background: #e0e8f5;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--md-sys-color-background);
+            font-family: 'Inter', 'Noto Sans SC', sans-serif;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden; /* 防止页面滚动 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* --- 2. SLIDE CONTAINER & PRESENTATION LOGIC --- */
+        #presentation-container {
+            width: 1280px;
+            height: 720px;
+            position: relative;
+            background-color: var(--md-sys-color-surface);
+            border-radius: 24px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+        }
+
+        /* 背景装饰 */
+        #presentation-container::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: 
+                radial-gradient(circle at 100% 0%, var(--md-sys-color-surface-container) 0%, transparent 50%),
+                radial-gradient(circle at 0% 100%, var(--md-sys-color-surface-container) 0%, transparent 50%);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding: 60px;
+            display: flex;
+            flex-direction: column;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.4s ease-in-out, visibility 0.4s ease-in-out;
+            z-index: 1;
+        }
+
+        .slide.active {
+            opacity: 1;
+            visibility: visible;
+            z-index: 2;
+        }
+
+        /* --- 3. ANIMATIONS FOR CONTENT --- */
+        .slide.active .slide-title {
+            animation: slideDownFade 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+        
+        .slide.active .content-area,
+        .slide.active .section-title-layout,
+        .slide.active .title-layout {
+            animation: slideUpFade 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) 0.2s forwards;
+            opacity: 0; /* 初始隐藏，等待动画 */
+        }
+
+        @keyframes slideDownFade {
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideUpFade {
+            from { opacity: 0; transform: translateY(40px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- 4. NAVIGATION CONTROLS --- */
+        .nav-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            z-index: 10;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 8px 24px;
+            border-radius: 30px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .nav-btn {
+            background: none;
+            border: none;
+            color: var(--md-sys-color-primary);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .nav-btn:hover { background-color: var(--md-sys-color-primary-container); }
+        .nav-btn:disabled { color: var(--md-sys-color-outline-variant); cursor: not-allowed; }
+
+        .slide-counter {
+            font-size: 16px;
+            color: var(--md-sys-color-on-surface-variant);
+            font-variant-numeric: tabular-nums;
+            font-weight: 500;
+        }
+
+        /* 隐形点击区域 (左右边缘翻页) */
+        .click-zone {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 15%;
+            z-index: 5;
+            cursor: pointer;
+        }
+        .click-zone.left { left: 0; }
+        .click-zone.right { right: 0; }
+
+        /* --- 5. TYPOGRAPHY & LAYOUT STYLES --- */
+        h1, h2, h3 { color: var(--md-sys-color-on-surface); font-weight: 700; }
+        p, li { color: var(--md-sys-color-on-surface-variant); font-size: 20px; line-height: 1.6; margin-bottom: 15px; }
+        
+        .en-text { font-family: 'Inter', sans-serif; }
+        .zh-text { font-family: 'Noto Sans SC', sans-serif; }
+        .highlight { color: var(--md-sys-color-primary); font-weight: 700; }
+
+        .slide-title {
+            color: var(--md-sys-color-primary);
+            font-size: 42px;
+            margin-bottom: 30px;
+            border-bottom: 3px solid var(--md-sys-color-primary-container);
+            padding-bottom: 15px;
+            opacity: 0; /* 用于动画 */
+        }
+
+        .content-area {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        /* Slide Type: Title */
+        .title-layout { text-align: center; margin: auto; }
+        .title-layout h1.zh-text { font-size: 64px; margin-bottom: 15px; color: var(--md-sys-color-primary); }
+        .title-layout h1.en-text { font-size: 36px; color: var(--md-sys-color-outline); }
+        .title-layout .subtitle { font-size: 24px; margin-top: 40px; color: var(--md-sys-color-on-surface); }
+
+        /* Slide Type: Section Intro */
+        .section-title-layout { text-align: center; margin: auto; }
+        .section-title-layout h2 { font-size: 56px; color: var(--md-sys-color-primary); margin-bottom: 20px;}
+        .section-title-layout p.en-text { font-size: 28px; color: var(--md-sys-color-outline); }
+        .section-title-layout hr {
+            background-color: var(--md-sys-color-primary);
+            border: none; height: 6px; border-radius: 3px;
+            margin: 30px auto; width: 120px;
+        }
+        .section-title-layout .desc { max-width: 800px; margin: 40px auto 0; font-size: 22px;}
+
+        /* Slide Type: Comparison */
+        .comparison-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            width: 100%;
+            height: 100%;
+            align-items: stretch;
+        }
+
+        .text-boxes { display: flex; flex-direction: column; gap: 30px; justify-content: center; }
+        
+        .text-box {
+            padding: 30px 24px 24px;
+            border-radius: 16px;
+            position: relative;
+        }
+        .text-box p { margin: 0; font-size: 22px; }
+        
+        .text-box::before {
+            position: absolute;
+            top: -14px; left: 24px;
+            padding: 4px 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .text-box.source { background-color: var(--md-sys-color-surface-container); border-left: 6px solid var(--md-sys-color-outline); }
+        .text-box.source::before { content: '中文原文'; background: var(--md-sys-color-outline); }
+        
+        .text-box.translation { background-color: var(--md-sys-color-primary-container); border-left: 6px solid var(--md-sys-color-primary); }
+        .text-box.translation::before { content: '英文改译'; background: var(--md-sys-color-primary); }
+        .text-box.translation p { color: var(--md-sys-color-on-primary-container); font-weight: 500;}
+
+        .rationale-box { display: flex; flex-direction: column; justify-content: center; }
+        .rationale-box h3 { font-size: 28px; color: var(--md-sys-color-secondary); margin-bottom: 25px; display: flex; align-items: center; gap: 10px; }
+        .rationale-list { list-style: none; }
+        .rationale-list li { margin-bottom: 25px; padding-left: 50px; position: relative; font-size: 18px; }
+        .rationale-list li i {
+            position: absolute; left: 0; top: 0;
+            color: var(--md-sys-color-primary);
+            background: var(--md-sys-color-surface-container-highest);
+            width: 36px; height: 36px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .rationale-list strong { color: var(--md-sys-color-on-surface); display: block; margin-bottom: 5px; font-size: 20px;}
+
+        /* Slide Type: Quote */
+        .quote-layout { margin: auto; text-align: center; width: 85%; background-color: var(--md-sys-color-primary-container); padding: 60px; border-radius: 28px; }
+        .quote-layout blockquote { color: var(--md-sys-color-on-primary-container); font-size: 42px; font-weight: 500; line-height: 1.5; margin: 0 0 30px 0; }
+        .tag { background-color: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container); padding: 6px 16px; border-radius: 12px; font-size: 16px; font-weight: bold; display: inline-block; margin-bottom: 20px;}
+
+    </style>
+</head>
+<body>
+
+<div id="presentation-container">
+    <!-- 左侧点击翻页区域 -->
+    <div class="click-zone left" onclick="prevSlide()" title="上一页"></div>
+
+    <!-- Slide 1: Cover -->
+    <div class="slide active">
+        <div class="title-layout">
+            <h1 class="zh-text">翻译策略汇报：酒的起源</h1>
+            <h1 class="en-text">Translating the Origins of Wine</h1>
+            <p class="subtitle zh-text">博物馆展板文字的“导游化”改编与对比分析</p>
+        </div>
+    </div>
+
+    <!-- Slide 2: Core Strategy -->
+    <div class="slide">
+        <div class="section-title-layout">
+            <hr>
+            <h2 class="zh-text">核心策略：目的论指导下的改写</h2>
+            <p class="en-text">Core Strategy: Skopos Theory in Action</p>
+            <p class="zh-text desc">
+                从“学术展示”向“口头导览”的转变。<br>我们不追求字面上的对等直译，而是追求<b>交际功能的对等</b>。<br>重点在于抓住听众的注意力，降低跨文化认知门槛。
+            </p>
+        </div>
+    </div>
+
+    <!-- Slide 3: Case 1 -->
+    <div class="slide">
+        <h2 class="slide-title zh-text">案例一：处理学术术语与冗长定语</h2>
+        <div class="content-area">
+            <div class="comparison-layout">
+                <div class="text-boxes">
+                    <div class="text-box source">
+                        <p class="zh-text">“证明在我国北方利用谷物酿酒的历史可追溯至9000-7000年前的<b>裴李岗</b>和<b>白家（或老官台）</b>文化时期。”</p>
+                    </div>
+                    <div class="text-box translation">
+                        <p class="en-text">"China wine is very, very old. Like, <span class="highlight">9000 years old!</span> ... Back in the Neolithic time..."</p>
+                    </div>
+                </div>
+                <div class="rationale-box">
+                    <h3 class="zh-text"><i class="fa-solid fa-lightbulb"></i> 翻译逻辑解析</h3>
+                    <ul class="rationale-list zh-text">
+                        <li>
+                            <i class="fa-solid fa-scissors"></i>
+                            <strong>信息降维 (Information Reduction)</strong>
+                            完全舍弃了“裴李岗”、“老官台”等对外国游客毫无意义的专有名词，避免增加认知负荷。
+                        </li>
+                        <li>
+                            <i class="fa-solid fa-bullseye"></i>
+                            <strong>突出核心震撼力 (Highlighting the "Wow" Factor)</strong>
+                            外国游客记不住朝代，但对数字敏感。将“9000年”作为核心卖点前置并强调。
+                        </li>
+                        <li>
+                            <i class="fa-solid fa-comment-dots"></i>
+                            <strong>语气体感 (Conversational Tone)</strong>
+                            加入 "Like, 9000 years old!" 这种强烈的口语化停顿和语气词，模拟真实导游的生动口吻。
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 4: Case 2 -->
+    <div class="slide">
+        <h2 class="slide-title zh-text">案例二：文化特有概念的跨语境传递</h2>
+        <div class="content-area">
+            <div class="comparison-layout">
+                <div class="text-boxes">
+                    <div class="text-box source">
+                        <p class="zh-text">“另一种是利用<b>发霉谷物</b>及某些<b>禾本科植物茎叶</b>制曲 (qū) 而酿造”</p>
+                    </div>
+                    <div class="text-box translation">
+                        <p class="en-text">"The other way is use <span class="highlight">'Qu'—it is a moldy grain with herbs.</span> ... <span class="highlight">kind of like beer.</span>"</p>
+                    </div>
+                </div>
+                <div class="rationale-box">
+                    <h3 class="zh-text"><i class="fa-solid fa-lightbulb"></i> 翻译逻辑解析</h3>
+                    <ul class="rationale-list zh-text">
+                        <li>
+                            <i class="fa-solid fa-language"></i>
+                            <strong>意译与解释 (Paraphrasing)</strong>
+                            原文“禾本科植物茎叶”属于植物学严谨表达，在导览中显得生硬。将其意译为通俗的 "herbs"（香草/草本植物），更易于听众快速理解其成分。
+                        </li>
+                        <li>
+                            <i class="fa-solid fa-bridge"></i>
+                            <strong>建立文化锚点 (Cultural Anchoring)</strong>
+                            将发芽谷物的发酵方式补充了一句 "kind of like beer"（就像啤酒一样）。利用目标语受众熟悉的本土概念，瞬间搭建起跨文化的理解桥梁。
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 5: Case 3 -->
+    <div class="slide">
+        <h2 class="slide-title zh-text">案例三：化繁为简的工艺描述</h2>
+        <div class="content-area">
+            <div class="comparison-layout">
+                <div class="text-boxes">
+                    <div class="text-box source">
+                        <p class="zh-text">“蒙古铁骑从欧洲引进了蒸馏酒技术，与<b>固态发酵、固态制曲、固态蒸馏、陶坛贮存</b>的工艺相结合...”</p>
+                    </div>
+                    <div class="text-box translation">
+                        <p class="en-text">"The Mongol cavalry brought distillation technology... Then we mix it with our <span class="highlight">'solid fermentation' style.</span> Very strong, very potent!"</p>
+                    </div>
+                </div>
+                <div class="rationale-box">
+                    <h3 class="zh-text"><i class="fa-solid fa-lightbulb"></i> 翻译逻辑解析</h3>
+                    <ul class="rationale-list zh-text">
+                        <li>
+                            <i class="fa-solid fa-compress"></i>
+                            <strong>提炼核心特征 (Distilling the Essence)</strong>
+                            原文的四步“固态”排比在书面语中气势磅礴，但在口语中是灾难。普通听众不需要知道化工流程，只需提取最核心的差异点——“solid fermentation（固态发酵）”。
+                        </li>
+                        <li>
+                            <i class="fa-solid fa-bolt"></i>
+                            <strong>补充感官反馈 (Sensory Supplement)</strong>
+                            在译文后方加上了 "Very strong, very potent!"，将干瘪的工艺名词转化为直观的感官体验描述。
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 6: Case 4 -->
+    <div class="slide">
+        <h2 class="slide-title zh-text">案例四：将静态文本转化为动态互动</h2>
+        <div class="content-area">
+            <div class="comparison-layout">
+                <div class="text-boxes">
+                    <div class="text-box source">
+                        <p class="zh-text">“同时发现，仰韶文化时期普遍存在的<b>尖底瓶也是酒器</b>。”<br><span style="font-size: 16px; color: var(--md-sys-color-outline);">(注：展板配有小口尖底瓶图片)</span></p>
+                    </div>
+                    <div class="text-box translation">
+                        <p class="en-text">"<span class="highlight">Look at this photo.</span> This is a 'small-mouth pointed-bottom bottle.' <span class="highlight">It look a bit strange, right?</span>"</p>
+                    </div>
+                </div>
+                <div class="rationale-box">
+                    <h3 class="zh-text"><i class="fa-solid fa-lightbulb"></i> 翻译逻辑解析</h3>
+                    <ul class="rationale-list zh-text">
+                        <li>
+                            <i class="fa-solid fa-hand-pointer"></i>
+                            <strong>空间引导 (Spatial Engagement)</strong>
+                            展板是视觉媒介。翻译没有干巴巴地直译句子，而是主动加入了 "Look at this photo" 的指令，引导听众的视线回到展板实体上。
+                        </li>
+                        <li>
+                            <i class="fa-solid fa-users"></i>
+                            <strong>建立对话感 (Interactive Questioning)</strong>
+                            加入设问 "It look a bit strange, right?"，打破了单向输出的陈述句模式，在现场营造出面对面交流的互动感。
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 7: Conclusion Hook -->
+    <div class="slide">
+        <h2 class="slide-title zh-text">点睛之笔：情感价值的升华</h2>
+        <div class="content-area">
+            <div class="quote-layout">
+                <span class="tag zh-text"><i class="fa-solid fa-pen-nib"></i> 创造性编译结尾</span>
+                <blockquote class="en-text">"So, when you drink, you not just drinking water with alcohol. You drinking 9000 years of history. Cheers, my friends!"</blockquote>
+                <div class="zh-text" style="color: var(--md-sys-color-primary); font-size: 20px; font-weight: 500; margin-top: 20px;">
+                    <p>原文以平淡的“独立于世界烈酒工艺”总结结尾。</p>
+                    <p>译者抛弃了这种学术结语，将“酒精”与“9000年历史”对立并置，<br>用一句 "Cheers" 完美收尾，完成了一次极具情绪感染力的跨文化输出。</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 8: End -->
+    <div class="slide">
+        <div class="section-title-layout">
+            <h2 class="en-text" style="font-size: 80px;">Thank You</h2>
+            <p class="zh-text desc" style="color: var(--md-sys-color-primary); font-weight: bold;">感谢聆听与交流！</p>
+        </div>
+    </div>
+
+    <!-- 右侧点击翻页区域 -->
+    <div class="click-zone right" onclick="nextSlide()" title="下一页"></div>
+
+    <!-- 底部导航控制栏 -->
+    <div class="nav-controls">
+        <button class="nav-btn" id="prevBtn" onclick="prevSlide()" title="上一页"><i class="fa-solid fa-chevron-left"></i></button>
+        <span class="slide-counter" id="slideCounter">1 / 8</span>
+        <button class="nav-btn" id="nextBtn" onclick="nextSlide()" title="下一页"><i class="fa-solid fa-chevron-right"></i></button>
+    </div>
+</div>
+
+<script>
+    const slides = document.querySelectorAll('.slide');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const slideCounter = document.getElementById('slideCounter');
+    let currentSlide = 0;
+    const totalSlides = slides.length;
+
+    function updateSlides() {
+        // 移除所有active类
+        slides.forEach(slide => slide.classList.remove('active'));
+        // 为当前slide添加active类以触发动画和显示
+        slides[currentSlide].classList.add('active');
+        
+        // 更新计数器
+        slideCounter.textContent = `${currentSlide + 1} / ${totalSlides}`;
+        
+        // 更新按钮状态
+        prevBtn.disabled = currentSlide === 0;
+        nextBtn.disabled = currentSlide === totalSlides - 1;
+    }
+
+    function nextSlide() {
+        if (currentSlide < totalSlides - 1) {
+            currentSlide++;
+            updateSlides();
+        }
+    }
+
+    function prevSlide() {
+        if (currentSlide > 0) {
+            currentSlide--;
+            updateSlides();
+        }
+    }
+
+    // 键盘左右方向键控制
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowRight' || e.key === 'Space') {
+            nextSlide();
+        } else if (e.key === 'ArrowLeft') {
+            prevSlide();
+        }
+    });
+
+    // 初始化状态
+    updateSlides();
+</script>
+
+</body>
+</html>
+
